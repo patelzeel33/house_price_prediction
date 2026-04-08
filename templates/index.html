@@ -265,9 +265,9 @@
   <h3>REST API — POST /predict</h3>
   <pre id="curlSnippet">curl -X POST http://localhost:5000/predict \
   -H "Content-Type: application/json" \
-  -d '{"MedInc":5.5,"HouseAge":20,"AveRooms":6.0,
+  -d '{"features": {"MedInc":5.5,"HouseAge":20,"AveRooms":6.0,
        "AveBedrms":1.1,"Population":1500,"AveOccup":3.0,
-       "Latitude":37.88,"Longitude":-122.23}'</pre>
+       "Latitude":37.88,"Longitude":-122.23}}'</pre>
 </div>
 
 <script>
@@ -309,10 +309,11 @@ async function runPrediction() {
 
   try {
     const features = getFeatures();
+    const payload = {"features": features};
     const res  = await fetch('/predict', {
       method:  'POST',
       headers: {'Content-Type':'application/json'},
-      body:    JSON.stringify(features),
+      body:    JSON.stringify(payload),
     });
     const data = await res.json();
     if (data.error) throw new Error(data.error);

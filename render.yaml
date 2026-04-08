@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: house-price-predictor
+    env: python
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn api.app:app"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.10.13
+      - key: MODEL_DIR
+        value: "models"

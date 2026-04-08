@@ -16,6 +16,9 @@ import sys
 import numpy as np
 import pandas as pd
 import joblib
+from dotenv import load_dotenv
+
+load_dotenv()
 
 from sklearn.model_selection  import train_test_split, cross_val_score, KFold
 from sklearn.preprocessing    import StandardScaler
@@ -35,7 +38,7 @@ from preprocess import (
 # ── Paths ─────────────────────────────────────────────────────────────────────
 BASE_DIR    = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA_PATH   = os.path.join(BASE_DIR, 'data',   'housing.csv')
-MODEL_DIR   = os.path.join(BASE_DIR, 'models')
+MODEL_DIR   = os.environ.get('MODEL_DIR', os.path.join(BASE_DIR, 'models'))
 MODEL_PATH  = os.path.join(MODEL_DIR, 'house_model.pkl')
 SCALER_PATH = os.path.join(MODEL_DIR, 'scaler.pkl')
 META_PATH   = os.path.join(MODEL_DIR, 'model_meta.pkl')

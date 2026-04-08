@@ -10,6 +10,9 @@ import sys
 import numpy as np
 import pandas as pd
 import joblib
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # ── Add src/ to path ──────────────────────────────────────────────────────────
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -17,9 +20,11 @@ from preprocess import engineer_features, get_feature_columns
 
 # ── Paths ─────────────────────────────────────────────────────────────────────
 BASE_DIR    = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-MODEL_PATH  = os.path.join(BASE_DIR, 'models', 'house_model.pkl')
-SCALER_PATH = os.path.join(BASE_DIR, 'models', 'scaler.pkl')
-META_PATH   = os.path.join(BASE_DIR, 'models', 'model_meta.pkl')
+MODEL_DIR   = os.environ.get('MODEL_DIR', os.path.join(BASE_DIR, 'models'))
+MODEL_PATH  = os.path.join(MODEL_DIR, 'house_model.pkl')
+SCALER_PATH = os.path.join(MODEL_DIR, 'scaler.pkl')
+META_PATH   = os.path.join(MODEL_DIR, 'model_meta.pkl')
+
 
 # ── Cached model objects ──────────────────────────────────────────────────────
 _model  = None
