@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>House Price Predictor</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0d1117;
+      color: #c9d1d9;
+      min-height: 100vh;
+      padding: 36px 20px;
+    }
+
+    h1 {
+      font-size: 2.2rem;
+      text-align: center;
+      background: linear-gradient(135deg, #58a6ff, #79c0ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 6px;
+    }
+    .subtitle { text-align:center; color:#8b949e; margin-bottom:36px; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 12px;
+      padding: 24px;
+    }
+
+    .card h2 { font-size: 1rem; color:#e6edf3; margin-bottom:20px; }
+
+    .field { margin-bottom: 16px; }
+    label  { display:block; font-size:0.78rem; color:#8b949e; margin-bottom:5px; text-transform:uppercase; letter-spacing:.04em; }
+
+    input[type=number], input[type=range] {
+      width: 100%;
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      color: #e6edf3;
+      font-size: 0.9rem;
+      padding: 9px 12px;
+      outline: none;
+      transition: border-color .2s;
+      -moz-appearance: textfield;
+    }
+    input[type=number]:focus { border-color: #58a6ff; }
+    input[type=number]::-webkit-inner-spin-button { -webkit-appearance:none; }
+
+    .slider-wrap { display:flex; align-items:center; gap:10px; }
+    input[type=range] {
+      padding: 0; height:4px; cursor:pointer;
+      accent-color: #58a6ff;
+    }
+    .slider-val { min-width:50px; text-align:right; font-size:.85rem; color:#58a6ff; font-weight:600; }
+
+    .btn {
+      width: 100%; padding: 13px;
+      background: linear-gradient(135deg, #1f6feb, #388bfd);
+      border: none; border-radius: 10px;
+      color: #fff; font-size: 1rem; font-weight: 600;
+      cursor: pointer; transition: opacity .2s, transform .1s;
+      margin-top: 8px;
+    }
+    .btn:hover  { opacity: .9; }
+    .btn:active { transform: scale(.98); }
+    .btn:disabled { opacity: .45; cursor:not-allowed; }
+
+    .result-card {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 12px;
+      padding: 28px;
+      max-width: 900px;
+      margin: 24px auto 0;
+      display: none;
+    }
+
+    .price-big {
+      font-size: 2.8rem;
+      font-weight: 700;
+      color: #3fb950;
+      letter-spacing: -1px;
+    }
+
+    .range-row {
+      display: flex; gap: 16px; margin-top: 16px;
+    }
+    .range-box {
+      flex:1; background:#0d1117; border:1px solid #30363d;
+      border-radius:8px; padding:12px; text-align:center;
+    }
+    .range-box .lbl { font-size:.72rem; color:#8b949e; text-transform:uppercase; }
+    .range-box .val { font-size:1.15rem; font-weight:600; color:#e6edf3; margin-top:4px; }
+
+    .meta-row { display:flex; gap:10px; margin-top:14px; }
+    .badge {
+      font-size:.75rem; padding:4px 12px;
+      background:#1c2b3a; color:#58a6ff;
+      border-radius:20px; border:1px solid #1f6feb44;
+    }
+
+    .examples { max-width:900px; margin:24px auto 0; }
+    .examples h3 { font-size:.85rem; color:#8b949e; margin-bottom:10px; text-transform:uppercase; letter-spacing:.04em; }
+    .ex-btns { display:flex; gap:10px; flex-wrap:wrap; }
+    .ex-btn {
+      padding:7px 16px; background:#161b22;
+      border:1px solid #30363d; border-radius:20px;
+      color:#c9d1d9; font-size:.82rem; cursor:pointer;
+      transition:border-color .2s, color .2s;
+    }
+    .ex-btn:hover { border-color:#58a6ff; color:#58a6ff; }
+
+    .api-card {
+      max-width:900px; margin:24px auto 0;
+      background:#161b22; border:1px solid #30363d;
+      border-radius:12px; padding:24px;
+    }
+    .api-card h3 { font-size:.85rem; color:#8b949e; margin-bottom:10px; text-transform:uppercase; letter-spacing:.04em; }
+    pre {
+      background:#0d1117; border:1px solid #30363d;
+      border-radius:8px; padding:14px;
+      font-size:.78rem; color:#79c0ff;
+      overflow-x:auto; white-space:pre;
+    }
+
+    .error { color:#f85149; font-size:.88rem; margin-top:8px; }
+  </style>
+</head>
+<body>
+
+<h1>House Price Predictor</h1>
+<p class="subtitle">Machine Learning · Random Forest · California Housing Dataset</p>
+
+<div class="grid">
+  <!-- Left: Location & Property -->
+  <div class="card">
+    <h2>Property Details</h2>
+
+    <div class="field">
+      <label>Median Household Income (×$10k)</label>
+      <div class="slider-wrap">
+        <input type="range" id="MedInc" min="0.5" max="15" step="0.1" value="5.5"
+               oninput="document.getElementById('MedInc_v').textContent=parseFloat(this.value).toFixed(1)">
+        <span class="slider-val" id="MedInc_v">5.5</span>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>House Age (years)</label>
+      <div class="slider-wrap">
+        <input type="range" id="HouseAge" min="1" max="52" step="1" value="20"
+               oninput="document.getElementById('HouseAge_v').textContent=this.value">
+        <span class="slider-val" id="HouseAge_v">20</span>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Average Rooms per household</label>
+      <div class="slider-wrap">
+        <input type="range" id="AveRooms" min="2" max="20" step="0.5" value="6"
+               oninput="document.getElementById('AveRooms_v').textContent=parseFloat(this.value).toFixed(1)">
+        <span class="slider-val" id="AveRooms_v">6.0</span>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Average Bedrooms per household</label>
+      <div class="slider-wrap">
+        <input type="range" id="AveBedrms" min="0.5" max="5" step="0.1" value="1.1"
+               oninput="document.getElementById('AveBedrms_v').textContent=parseFloat(this.value).toFixed(1)">
+        <span class="slider-val" id="AveBedrms_v">1.1</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: Location & Demographics -->
+  <div class="card">
+    <h2>Location &amp; Demographics</h2>
+
+    <div class="field">
+      <label>Block Population</label>
+      <div class="slider-wrap">
+        <input type="range" id="Population" min="100" max="10000" step="100" value="1500"
+               oninput="document.getElementById('Population_v').textContent=parseInt(this.value).toLocaleString()">
+        <span class="slider-val" id="Population_v">1,500</span>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Average Occupancy (persons/household)</label>
+      <div class="slider-wrap">
+        <input type="range" id="AveOccup" min="1" max="8" step="0.1" value="3"
+               oninput="document.getElementById('AveOccup_v').textContent=parseFloat(this.value).toFixed(1)">
+        <span class="slider-val" id="AveOccup_v">3.0</span>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Latitude</label>
+      <div class="slider-wrap">
+        <input type="range" id="Latitude" min="32.5" max="42" step="0.01" value="37.88"
+               oninput="document.getElementById('Latitude_v').textContent=parseFloat(this.value).toFixed(2)">
+        <span class="slider-val" id="Latitude_v">37.88</span>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Longitude</label>
+      <div class="slider-wrap">
+        <input type="range" id="Longitude" min="-124.5" max="-114" step="0.01" value="-122.23"
+               oninput="document.getElementById('Longitude_v').textContent=parseFloat(this.value).toFixed(2)">
+        <span class="slider-val" id="Longitude_v">-122.23</span>
+      </div>
+    </div>
+
+    <button class="btn" id="predictBtn" onclick="runPrediction()">Predict Price</button>
+    <div class="error" id="errMsg"></div>
+  </div>
+</div>
+
+<!-- Result -->
+<div class="result-card" id="resultCard">
+  <p style="font-size:.8rem;color:#8b949e;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Estimated Price</p>
+  <div class="price-big" id="priceDisplay">$0</div>
+  <div class="range-row">
+    <div class="range-box">
+      <div class="lbl">Conservative Low</div>
+      <div class="val" id="priceLow">—</div>
+    </div>
+    <div class="range-box">
+      <div class="lbl">Optimistic High</div>
+      <div class="val" id="priceHigh">—</div>
+    </div>
+  </div>
+  <div class="meta-row" id="metaRow"></div>
+</div>
+
+<!-- Example presets -->
+<div class="examples">
+  <h3>Try a preset</h3>
+  <div class="ex-btns">
+    <button class="ex-btn" onclick="setPreset('luxury')">Luxury Coastal</button>
+    <button class="ex-btn" onclick="setPreset('midrange')">Mid-range Suburban</button>
+    <button class="ex-btn" onclick="setPreset('starter')">Starter Home</button>
+    <button class="ex-btn" onclick="setPreset('inland')">Affordable Inland</button>
+  </div>
+</div>
+
+<!-- API snippet -->
+<div class="api-card">
+  <h3>REST API — POST /predict</h3>
+  <pre id="curlSnippet">curl -X POST http://localhost:5000/predict \
+  -H "Content-Type: application/json" \
+  -d '{"MedInc":5.5,"HouseAge":20,"AveRooms":6.0,
+       "AveBedrms":1.1,"Population":1500,"AveOccup":3.0,
+       "Latitude":37.88,"Longitude":-122.23}'</pre>
+</div>
+
+<script>
+const fmt  = v => '$' + Math.round(v).toLocaleString();
+const fmtK = v => '$' + (Math.round(v/1000)).toLocaleString() + 'K';
+
+const presets = {
+  luxury:   {MedInc:10.5, HouseAge:8,  AveRooms:9.0, AveBedrms:1.5, Population:800,  AveOccup:2.5, Latitude:37.85, Longitude:-122.25},
+  midrange: {MedInc:5.5,  HouseAge:20, AveRooms:6.0, AveBedrms:1.2, Population:1500, AveOccup:3.2, Latitude:34.05, Longitude:-118.25},
+  starter:  {MedInc:3.5,  HouseAge:30, AveRooms:5.0, AveBedrms:1.1, Population:2000, AveOccup:3.5, Latitude:33.80, Longitude:-117.90},
+  inland:   {MedInc:2.8,  HouseAge:40, AveRooms:4.5, AveBedrms:1.1, Population:3500, AveOccup:4.0, Latitude:36.78, Longitude:-119.42},
+};
+
+function setVal(id, val) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.value = val;
+  el.dispatchEvent(new Event('input'));
+}
+
+function setPreset(key) {
+  const p = presets[key];
+  Object.entries(p).forEach(([k, v]) => setVal(k, v));
+}
+
+function getFeatures() {
+  const ids = ['MedInc','HouseAge','AveRooms','AveBedrms','Population','AveOccup','Latitude','Longitude'];
+  const obj = {};
+  ids.forEach(id => { obj[id] = parseFloat(document.getElementById(id).value); });
+  return obj;
+}
+
+async function runPrediction() {
+  const btn = document.getElementById('predictBtn');
+  const err = document.getElementById('errMsg');
+  err.textContent = '';
+  btn.disabled = true;
+  btn.textContent = 'Predicting…';
+
+  try {
+    const features = getFeatures();
+    const res  = await fetch('/predict', {
+      method:  'POST',
+      headers: {'Content-Type':'application/json'},
+      body:    JSON.stringify(features),
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    document.getElementById('priceDisplay').textContent = fmt(data.predicted_price);
+    document.getElementById('priceLow').textContent     = fmtK(data.price_range.low);
+    document.getElementById('priceHigh').textContent    = fmtK(data.price_range.high);
+
+    const mr = document.getElementById('metaRow');
+    mr.innerHTML = `
+      <span class="badge">Confidence ${data.confidence}</span>
+      <span class="badge">${data.features_used} features used</span>
+      <span class="badge">${data.model_name || 'Random Forest'}</span>
+    `;
+    document.getElementById('resultCard').style.display = 'block';
+  } catch(e) {
+    err.textContent = 'Error: ' + e.message + ' — make sure the model is trained: python src/train.py';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Predict Price';
+  }
+}
+</script>
+</body>
+</html>
